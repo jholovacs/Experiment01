@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Experiment01.Models;
 using Experiment01.Services;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.CookiePolicy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SpaServices.Webpack;
@@ -54,6 +55,12 @@ namespace Experiment01
 
 			});
 
+			services.AddAuthentication().AddCookie(options =>
+			{
+				options.SlidingExpiration = true;
+				options.ExpireTimeSpan = TimeSpan.FromMinutes(20);
+			});
+
 			services.AddMvc();
         }
 
@@ -72,7 +79,8 @@ namespace Experiment01
             {
                 app.UseExceptionHandler("/Home/Error");
             }
-	        app.UseAuthentication();
+			app.UseAuthentication();
+
             app.UseStaticFiles();
 
             app.UseMvc(routes =>

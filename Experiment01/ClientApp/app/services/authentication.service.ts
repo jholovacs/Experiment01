@@ -1,65 +1,49 @@
-﻿import { Injectable } from '@angular/core';
-import { Http, Headers, Response } from '@angular/http';
-import { Observable } from 'rxjs';
-import 'rxjs/add/operator/map'
+﻿import 'rxjs/add/operator/map'
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable()
 export class AuthenticationService {
-    public token: string;
 
-    constructor(private http: Http) {
-        var currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        this.token = currentUser && currentUser.token;
-    }
+    constructor(private readonly http: HttpClient) {}
 
-    login(username: string, password: string): Observable<boolean> {
-        return this.http.post('/api/authentication/login', JSON.stringify({ username: username, password: password }))
-            .map((response: Response) => {
-                return this.updateStorage(response, username);
-            });
+    login(username: string, password: string) {
+        return this.http.post<IAuthenticationResponse>('/api/authentication/login',
+                JSON.stringify({ username: username, password: password }))
+            .subscribe(response => {
+                    localStorage.setItem('username', response.username);
+                    localStorage.setItem('authToken', response.token);
+                    localStorage.setItem('refreshToken', response.refreshToken);
+                },
+                error => console.log(error));
     }
 
     logout(): void {
-        this.token = '';
-        localStorage.removeItem('currentUser');
+        localStorage.removeItem('username');
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
     }
 
-    refresh(username: string): Observable<boolean> {
-        var currentUser = JSON.parse(localStorage.getItem('currentUser') || '{}');
-        var refreshToken = currentUser && currentUser.refreshToken;
-        return this.http.post('/api/authentication/refresh',
-            JSON.stringify({ username: username, refreshToken: refreshToken }))
-            .map((response: Response) => {
-                return this.updateStorage(response, username);
-            });
+    refreshAuthToken() {
+        const username = localStorage.getItem('username') || '';
+        const refreshToken = localStorage.getItem('refreshToken') || '';
+        return this.http.post<string>('api/authentication/refresh',
+                { username: username, refreshToken: refreshToken })
+            .subscribe(response => {
+                    localStorage.setItem('authToken', response);
+                },
+                error => console.log(error));
     }
 
-    register(username: string, email: string, password: string): Observable<boolean> {
+    register(username: string, email: string, password: string) {
         return this.http.post('/api/authentication/register',
-                JSON.stringify({ username: username, email: email, password: password }))
-            .map((response: Response) => {
-                return (response.status === 200);
-            });
+            { username: username, email: email, password: password });
     }
 
-    private updateStorage(response: Response, username: string): boolean {
-        let token = response.json() && response.json().token;
-        if (token) {
-            this.token = token;
-            let refreshToken = response.json().refreshToken;
-            localStorage.setItem('currentUser', JSON.stringify({ username: username, token: token, refreshToken: refreshToken }));
-            return true;
-        } else {
-            return false;
-        }
-    }
 }
 
-export class RegisterModel {
-    givenName: string;
-    surname: string;
-    middleName: string;
+export interface IAuthenticationResponse {
     username: string;
-    password: string;
-    email: string;
+    token: string;
+    refreshToken: string;
 }

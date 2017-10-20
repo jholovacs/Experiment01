@@ -1,47 +1,21 @@
-﻿import { Injectable } from '@angular/core';
-import { Request, XHRBackend, RequestOptions, Response, Http, RequestOptionsArgs, Headers } from '@angular/http';
-import { Observable } from 'rxjs/Observable';
-import { Router } from '@angular/router';
-import { AuthenticationService } from './authentication.service';
-import 'rxjs/add/operator/catch';
-import 'rxjs/add/observable/throw';
+﻿//import { Injectable } from '@angular/core';
+//import { HttpInterceptor, HttpRequest, HttpHandler, HttpErrorResponse, HttpEvent, HttpResponse } from '@angular/common/http';
+//import { CanActivate, Router, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
+//import { AuthenticationService } 
 
-@Injectable()
-export class AuthenticatedHttpService extends Http {
+//@Injectable()
+//export class AuthenticatedHttpService implements HttpInterceptor {
 
-    constructor(backend: XHRBackend, defaultOptions: RequestOptions, private router: Router, private authService: AuthenticationService) {
-        super(backend, defaultOptions);
-    }
-
-    request(url: string | Request, options?: RequestOptionsArgs): Observable<Response> {
-        //do whatever 
-        if (typeof url === 'string') {
-            if (!options) {
-                options = { headers: new Headers() };
-            }
-            this.setHeaders(options);
-        } else {
-            this.setHeaders(url);
-        }
-
-        return super.request(url, options).catch(this.catchErrors());
-    }
-
-    private catchErrors() {
-        return (res: Response) => {
-            if (res.status === 401 || res.status === 403) {
-                //handle authorization errors
-                //in this example I am navigating to logout route which brings the login screen
-                this.router.navigate(['logout']);
-            }
-            return Observable.throw(res);
-        };
-    }
-
-    private setHeaders(objectToSetHeadersTo: Request | RequestOptionsArgs) {
-        //add whatever header that you need to every request
-        //in this example I add header token by using authService that I've created
-        if (objectToSetHeadersTo == null || objectToSetHeadersTo.headers == null) return;
-        objectToSetHeadersTo.headers.set('Authorization', `Bearer ${this.authService.token || ''}`);
-    }
-}
+//    intercept(request: HttpRequest<any>, next: HttpHandler) {
+//        const authToken = localStorage.getItem('authToken') || '';
+//        if (authToken === '' || request.url === '/api/auth/login' || request.url === '/api/auth/refresh') {
+//            return (next.handle(request));
+//        }
+//        request = request.clone({
+//            setHeaders: {
+//                Authorization: `Bearer ${authToken}`
+//            }
+//        });
+//        return next.handle(request);
+//    }
+//}
